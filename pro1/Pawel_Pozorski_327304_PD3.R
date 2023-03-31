@@ -396,6 +396,8 @@ base_4 <- function(Posts, Users) {
   #------ wewnetrzna kwarende ze srodka
   # laczymy wyniki dwoch poprzednich kwarend
   s3 <- merge(s1, s2, by.x = "OwnerUserId", by.y = "OwnerUserId")
+  # zostawiamy tylko te gdzie AnswersNumber > QuestionsNumber
+  s3 <- s3[s3$AnswersNumber > s3$QuestionsNumber, ]
   # sortujemy po AnswersNumber i zostawiamy tylko 5 najwiekszych
   s3 <- s3[order(s3[, c("AnswersNumber")], decreasing = TRUE), ][1:5, ]
   # resetujemy indeks
@@ -439,6 +441,8 @@ dplyr_4 <- function(Posts, Users) {
     join_by(OwnerUserId == OwnerUserId),
     na_matches = "never"
   ) %>%
+    # zostawiamy tylko te gdzie AnswersNumber > QuestionsNumber
+    filter(AnswersNumber > QuestionsNumber) %>%
     # sortujemy po AnswersNumber
     arrange(-AnswersNumber) %>%
     # zostawiamy tylko 5
@@ -482,6 +486,8 @@ table_4 <- function(Posts, Users) {
   #------ wewnetrzna kwarende ze srodka
   # laczymy wyniki dwoch poprzednich kwarend
   s3 <- na.omit(s1[s2, on = .(OwnerUserId = OwnerUserId)])
+  # zostawiamy tylko te gdzie AnswersNumber > QuestionsNumber
+  s3 <- s3[AnswersNumber > QuestionsNumber, 
   # sortujemy po AnswersNumber i zostawiamy tylko 5 najwiekszych
   setorder(s3, -AnswersNumber)
   s3 <- head(s3, 5)
