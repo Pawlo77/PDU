@@ -202,12 +202,10 @@ table_2 <- function(Posts) {
   # grupujemy po roku, nastepnie miesiacu i zbieramy liczbe wejsc i max ze Score
   s <- s[,
     .(PostsNumber = length(Score), MaxScore = max(Score, na.rm = TRUE)),
-    by = .(Month, Year)
+    by = .(Year, Month)
   ]
   # nas interesuja tylko te co maja PostsNumber > 1000
   s <- s[PostsNumber > 1000]
-  # ustawiamy odpowiednio kolumny
-  setcolorder(s, c("Year", "Month", "PostsNumber", "MaxScore"))
   # zmieniamy s na data.frame
   return(as.data.frame(s))
 }
