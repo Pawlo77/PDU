@@ -143,13 +143,10 @@ base_2 <- function(Posts) {
   # tworzymy data.frame s zawierajaca 3 dalej nas
   # interesujace kolumny - Score, Year, Month
   s <- Posts[idxs, "Score", drop = FALSE]
-  # zaczynamy od pobrania z daty roku i miesiaca
-  # konwertujemy tekstowa date na objekt R
-  date <- as.POSIXct(Posts$CreationDate[idxs])
   # bierzemy rok z daty i zapisujemy jako nowa kolumne do s
-  s["Year"] <- format(date, format = "%Y")
+  s["Year"] <- substring(Posts$CreationDate[idxs], 1, 4)
   # bierzemy miesiac z daty i zapisujemy jako nowa kolumne do s
-  s["Month"] <- format(date, format = "%m")
+  s["Month"] <- substring(Posts$CreationDate[idxs], 6, 7)
   # grupujemy po roku, nastepnie miesiacu i zbieramy liczbe wejsc
   s1 <- aggregate(s$Score, s[, c("Year", "Month")], length)
   colnames(s1)[3] <- "PostsNumber"
@@ -174,8 +171,8 @@ dplyr_2 <- function(Posts) {
     filter(PostTypeId == 1 | PostTypeId == 2) %>%
     # dołączamy date
     mutate(
-      Year = format(as.POSIXct(CreationDate), format = "%Y"),
-      Month = format(as.POSIXct(CreationDate), format = "%m")
+      Year = substring(CreationDate, 1, 4),
+      Month = substring(CreationDate, 6, 7)
     ) %>%
     # dalej nas interesują juz tylko Year, Month, Score
     select(Year, Month, Score) %>%
@@ -195,9 +192,8 @@ table_2 <- function(Posts) {
   # interesuje nas tylko PostTypeId 1 lub 2, pracujemy z CreationDate i Score
   s <- s[PostTypeId == 1 | PostTypeId == 2, .(CreationDate, Score)]
   # dolaczamy date podobnie jak wczesniej i usuwamy CreationDate
-  date <- as.POSIXct(s$CreationDate)
-  yr <- format(date, format = "%Y") # bierzemy rok z daty
-  mm <- format(date, format = "%m") # bierzemy miesiac z daty
+  yr <- substring(s$CreationDate, 1, 4) # bierzemy rok z daty
+  mm <- substring(s$CreationDate, 6, 7) # bierzemy miesiac z daty
   s <- s[, ":="(Year = yr, Month = mm, CreationDate = NULL)]
   # grupujemy po roku, nastepnie miesiacu i zbieramy liczbe wejsc i max ze Score
   s <- s[,
@@ -485,7 +481,7 @@ table_4 <- function(Posts, Users) {
   # laczymy wyniki dwoch poprzednich kwarend
   s3 <- na.omit(s1[s2, on = .(OwnerUserId = OwnerUserId)])
   # zostawiamy tylko te gdzie AnswersNumber > QuestionsNumber
-  s3 <- s3[AnswersNumber > QuestionsNumber, 
+  s3 <- s3[AnswersNumber > QuestionsNumber]
   # sortujemy po AnswersNumber i zostawiamy tylko 5 najwiekszych
   setorder(s3, -AnswersNumber)
   s3 <- head(s3, 5)
