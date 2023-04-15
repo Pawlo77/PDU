@@ -96,11 +96,11 @@ table_1 <- function(Users) {
 # rownowaznosci wynikow pozostalych zadan
 # compare_calls <- function(sql_call_score, base_call_score,
 #                           dplyr_call_score, table_call_score) {
-#   c1 <- all_equal(sql_call_score, base_call_score)
-#   c2 <- all_equal(base_call_score, dplyr_call_score)
-#   c3 <- all_equal(dplyr_call_score, table_call_score)
+#   c1 <- all.equal(sql_call_score, base_call_score)
+#   c2 <- all.equal(base_call_score, dplyr_call_score)
+#   c3 <- all.equal(dplyr_call_score, table_call_score)
 #   # zwraca TRUE tylko jak wszystkie TRUE
-#   return (isTRUE(c1) && isTRUE(c2) && isTRUE(c3))
+#   return(isTRUE(c1) && isTRUE(c2) && isTRUE(c3))
 # }
 
 # compare_calls(
@@ -159,6 +159,8 @@ base_2 <- function(Posts) {
   s1["MaxScore"] <- s2$MaxScore
   # wybieramy tylko te wejscia co maja PostsNumber > 1000
   s1 <- s1[idxs, ]
+  # sortujemy mimo ze nie trzeba ale all.equal inaczej ma problem
+  s1 <- s1[order(s1$Year, s1$Month), ]
   # resetujemy indeks
   rownames(s1) <- NULL
   # zwracamy wynik
@@ -229,15 +231,20 @@ table_2 <- function(Posts) {
 
 sql_3 <- function(Posts, Users) {
   # wykonujemy zapytanie sql przez sqldf i zwracamy
+  Questions <- sqldf("
+    SELECT OwnerUserId, SUM(ViewCount) as TotalViews
+    FROM Posts
+    WHERE PostTypeId = 1
+    GROUP BY OwnerUserId
+  ")
   sqldf("
-      SELECT Id, DisplayName, TotalViews FROM (
-        SELECT OwnerUserId, SUM(ViewCount) as TotalViews FROM Posts
-        WHERE PostTypeId = 1
-        GROUP BY OwnerUserId
-      ) AS Questions JOIN Users
-      ON Users.Id = Questions.OwnerUserId ORDER BY TotalViews DESC
-      LIMIT 10
-    ")
+    SELECT Id, DisplayName, TotalViews
+    FROM Questions
+    JOIN Users
+    ON Users.Id = Questions.OwnerUserId
+    ORDER BY TotalViews DESC
+    LIMIT 10
+  ")
 }
 
 base_3 <- function(Posts, Users) {
@@ -394,11 +401,13 @@ base_4 <- function(Posts, Users) {
   s3 <- s3[s3$AnswersNumber > s3$QuestionsNumber, ]
   # sortujemy po AnswersNumber i zostawiamy tylko 5 najwiekszych
   s3 <- s3[order(s3[, c("AnswersNumber")], decreasing = TRUE), ][1:5, ]
-  # resetujemy indeks
-  rownames(s3) <- NULL
   #------ najbardziej zewnetrzna kwarenda
   # laczymy wyniki poprzedniej kwarendy z tabela Users
   s4 <- merge(s3, Users, by.x = "OwnerUserId", by.y = "Id")
+  # sortujemy mimo ze nie trzeba ale all.equal inaczej ma problem
+  s4 <- s4[order(s4$AnswersNumber, decreasing = TRUE), ]
+  # resetujemy indeks
+  rownames(s4) <- NULL
   # zwracamy to co nas interesuje
   return(s4[, c(
     "DisplayName",
@@ -523,33 +532,36 @@ table_4 <- function(Posts, Users) {
 
 sql_5 <- function(Posts, Comments, Users) {
   # wykonujemy zapytanie sql przez sqldf i zwracamy
+  CmtTotScr <- sqldf("
+    SELECT PostId, SUM(Score) AS CommentsTotalScore
+    FROM Comments
+    GROUP BY PostId
+  ")
+  PostsBestComments <- sqldf("
+    SELECT
+      Posts.OwnerUserId,
+      Posts.Title,
+      Posts.CommentCount,
+      Posts.ViewCount,
+      CmtTotScr.CommentsTotalScore
+    FROM CmtTotScr
+    JOIN Posts ON Posts.Id = CmtTotScr.PostId
+    WHERE Posts.PostTypeId=1
+  ")
   sqldf("
-      SELECT
-        Title,
-        CommentCount,
-        ViewCount,
-        CommentsTotalScore,
-        DisplayName,
-        Reputation,
-        Location
-      FROM (
-        SELECT
-          Posts.OwnerUserId,
-          Posts.Title,
-          Posts.CommentCount,
-          Posts.ViewCount,
-          CmtTotScr.CommentsTotalScore
-        FROM (
-          SELECT PostId, SUM(Score) AS CommentsTotalScore
-          FROM Comments
-          GROUP BY PostId
-        ) AS CmtTotScr
-        JOIN Posts ON Posts.Id = CmtTotScr.PostId WHERE Posts.PostTypeId=1
-      ) AS PostsBestComments
-      JOIN Users ON PostsBestComments.OwnerUserId = Users.Id
-      ORDER BY CommentsTotalScore DESC
-      LIMIT 10
-    ")
+    SELECT
+      Title,
+      CommentCount,
+      ViewCount,
+      CommentsTotalScore,
+      DisplayName,
+      Reputation,
+      Location
+    FROM PostsBestComments
+    JOIN Users ON PostsBestComments.OwnerUserId = Users.Id
+    ORDER BY CommentsTotalScore DESC
+    LIMIT 10
+  ")
 }
 
 base_5 <- function(Posts, Comments, Users) {
