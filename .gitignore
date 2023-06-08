@@ -1,5 +1,6 @@
 # data
 *.csv
+*.csv.gz
 *.db
 
 # Byte-compiled / optimized / DLL files
