@@ -25,4 +25,6 @@ The repository includes the following projects:
 
 2. **Project 2** - *Airline Performance Data Analysis*: This project is stored in a separate repository with the same name. It is a more advanced project that involves analyzing a large dataset of airline performance data. The project includes the creation of various interactive and non-interactive charts as well as CSV files containing the results of the analysis. The project is summarized in a concise presentation.
 
+3. **Project 3** - idea simmilar to project's one, however this time all necessary funtions are implemented in python using pandas and sqlite3 packages.
+
 These projects provide practical experience in data preprocessing techniques using R and Python, showcasing the advantages of each language in different scenarios. They aim to enhance understanding and proficiency in handling structured data and performing preprocessing tasks as part of the Data Science curriculum.
